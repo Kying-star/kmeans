@@ -33,10 +33,13 @@ void init(Data* MatchData);
 /**
  * @description: 获取两节点之间距离
  * @param {Data} srcNation 源点  {Data} targetNation 终点
+ * @return {float} 两点间距离
  */
 float getDist(float * srcArray,float * targetArray);
 void  showData(Data* MatchData,CityName* City);
-void k_means(Data* MatchData,CityName* City);
+void kMeans(Data* MatchData,CityName* City);
+int isOk(int* newArray,Data* MatchData);
+
 int main() {
     Data MatchData[15];
     CityName City[15];
@@ -50,10 +53,19 @@ int main() {
         }
         printf("\n");
     }
-    k_means(MatchData,City);
+    kMeans(MatchData,City);
     return 0;
 }
-void  showData(Data* MatchData,CityName* City){
+int isOk(int* newArray,Data* MatchData){
+    int flag = 1;
+    for (int i = 0; i < 15; ++i) {
+            if(newArray[i] != MatchData[i].type){
+                flag = 0;
+            }
+    }
+    return flag;
+}
+void showData(Data* MatchData,CityName* City){
     for (int i = 0; i < 3; ++i) {
         printf("%c :[ ",i+65);
         for (int j = 0; j < 15; ++j) {
@@ -63,38 +75,60 @@ void  showData(Data* MatchData,CityName* City){
         }
         printf("]\n");
     }
-
 }
 void init(Data* MatchData){
     for (int i = 0; i < 3; ++i) {
         initData(MatchData,i);
     }
 }
-void k_means(Data* MatchData,CityName* City){
+void kMeans(Data* MatchData,CityName* City){
     float boss[3][3];
+    int historyList[15];
     int A = 1,B = 2,C = 3;
-    int select[3] = {1,9,12};
+    int select[3] = {1,10,14};
+    int count = 0; //迭代次数
     MatchData[select[0]].type = A;
     MatchData[select[1]].type = B;
     MatchData[select[2]].type = C;
+    // 初始化源点数组
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             boss[i][j] = MatchData[select[i]].data[j];
         }
     }
-    for (int i = 0; i < 15; ++i) {
-        float min = infinity;
-        int flag;
-        for (int j = 0; j < 3; ++j) {
-            if( min > getDist(boss[j],MatchData[i].data) ){
-                min = getDist(boss[j],MatchData[i].data);
-                flag = select[j];
+    while (!isOk(historyList,MatchData)) {
+        for (int i = 0; i < 15; ++i) {
+            historyList[i] = MatchData[i].type;
+        }
+        for (int i = 0; i < 15; ++i) {
+            float min = infinity;
+            int flag;
+            for (int j = 0; j < 3; ++j) {
+                if( min > getDist(boss[j],MatchData[i].data) ){
+                    min = getDist(boss[j],MatchData[i].data);
+                    flag = j;
+                }
+            }
+            printf("距离 %s 最近的城市为 %s 距离为 %f\n",City[i].CityName,City[flag].CityName,min);
+            MatchData[i].type = flag+1;
+        }
+        showData(MatchData,City);
+        for (int i = 0; i < 3; ++i) {
+            float sum[3] = {0,0,0};
+            float number = 0;
+            for (int j = 0; j < 15; ++j) {
+                if( MatchData[j].type == i + 1 ){
+                    for (int k = 0; k < 3; ++k) {
+                        sum[k] += MatchData[j].data[k];
+                        number++;
+                    }
+                }
+            }
+            for (int j = 0; j < 3; ++j) {
+                boss[i][j] = sum[j] / number;
             }
         }
-        printf("距离 %s 最近的城市为 %s 距离为 %f\n",City[i].CityName,City[flag].CityName,min);
-        MatchData[i].type = MatchData[flag].type;
     }
-    showData(MatchData,City);
 }
 float getDist(float *  srcArray,float * targetArray){
     float sum = 0;
@@ -149,6 +183,12 @@ void initData(Data* MatchData,int order){
         }
     }
     for (int i = 0; i < 15; ++i) {
-        MatchData[i].data[order] = ( MatchData[i].data[order] - min)/( max - min );
+        float temp = ( MatchData[i].data[order] - min)/( max - min );
+        if( temp * 100 - (int)(temp * 100) >= 0.5 ){
+            temp = ((int)(temp * 100) + 1.0) / 100;
+        } else {
+            temp = ((int)(temp * 100)) / 100.0;
+        }
+        MatchData[i].data[order] = temp;
     }
 }
