@@ -8,8 +8,8 @@ typedef struct {
     int type;
 }Data;
 typedef struct {
-    char CityName[100];
-}CityName;
+    char NationName[100];
+}NationName;
 /**
  * @description: 获取比赛数据
  * @param {Data*} MatchData 储存比赛数据的头节点
@@ -17,9 +17,9 @@ typedef struct {
 void getData(Data * MatchData);
 /**
  * @description: 获取城市名称
- * @param {CityName*} City 储存城市名称的头节点
+ * @param {NationName*} Nation 储存城市名称的头节点
  */
-void getCityName(CityName* City);
+void getNationName(NationName* Nation);
 /**
  * @description: 格式化数据
  * @param {Data*} MatchData 储存比赛数据的头节点 {int} order 比赛场次
@@ -36,34 +36,48 @@ void init(Data* MatchData);
  * @return {float} 两点间距离
  */
 float getDist(float * srcArray,float * targetArray);
-void  showData(Data* MatchData,CityName* City);
+void  showData(Data* MatchData,NationName* Nation);
 /**
  * @description: kmeans算法
- * @param {Data*} MatchData 储存比赛数据的头节点 {CityName*} City 储存城市名称的头节点
+ * @param {Data*} MatchData 储存比赛数据的头节点 {NationName*} Nation 储存城市名称的头节点
  */
-void kMeans(Data* MatchData,CityName* City);
+void kMeans(Data* MatchData,NationName* Nation);
+/**
+ * @description: 判断数组类型是否被刷新
+ * @param {int*} newArray 存储更新的类型数组 {Data*} MatchData 储存比赛数据的头节点
+ */
 int isOk(int* newArray,Data* MatchData);
+/**
+ * @description: 保留小数点后几位
+ * @param {float} temp 原数 {float} pos 保留位数
+ * @return {float} 保留小数后的数
+ */
 float RetainDecimalPoints(float temp,float pos);
-void showMatchData(CityName * City,Data * MatchData){
-    printf("--------------------------------------------\n");
+/**
+ * @description: 显示比赛数据
+ * @param {Data*} MatchData 储存比赛数据的头节点 {NationName*} Nation 储存城市名称的头节点
+ */
+void showMatchData(NationName * Nation,Data * MatchData);
+int main() {
+    Data MatchData[15];
+    NationName Nation[15];
+    getData(MatchData);
+    init(MatchData);
+    getNationName(Nation);
+    showMatchData(Nation,MatchData);
+    kMeans(MatchData,Nation);
+    return 0;
+}
+void showMatchData(NationName * Nation,Data * MatchData){
+    printf("----------------------初始化城市数据集----------------------\n");
     for (int i = 0; i < 15; ++i) {
-        printf(" %6s -->",City[i].CityName);
+        printf(" %6s -->",Nation[i].NationName);
         for (int j = 0; j < 3; ++j) {
-            printf(" %d: [%f]",j+1,MatchData[i].data[j]);
+            printf(" %d: [%.2f]",j+1,MatchData[i].data[j]);
         }
         printf("\n");
     }
-    printf("--------------------------------------------\n");
-}
-int main() {
-    Data MatchData[15];
-    CityName City[15];
-    getData(MatchData);
-    init(MatchData);
-    getCityName(City);
-    showMatchData(City,MatchData);
-    kMeans(MatchData,City);
-    return 0;
+    printf("----------------------               ----------------------\n");
 }
 int isOk(int* newArray,Data* MatchData){
     int flag = 1;
@@ -74,12 +88,12 @@ int isOk(int* newArray,Data* MatchData){
     }
     return flag;
 }
-void showData(Data* MatchData,CityName* City){
+void showData(Data* MatchData,NationName* Nation){
     for (int i = 0; i < 3; ++i) {
         printf("%c :[ ",i+65);
         for (int j = 0; j < 15; ++j) {
             if (MatchData[j].type == i + 1 ){
-                printf("%s ",City[j].CityName);
+                printf("%s ",Nation[j].NationName);
             }
         }
         printf("]\n");
@@ -90,11 +104,15 @@ void init(Data* MatchData){
         initData(MatchData,i);
     }
 }
-void kMeans(Data* MatchData,CityName* City){
+void kMeans(Data* MatchData,NationName* Nation){
     float boss[3][3];
     int historyList[15];
     int A = 1,B = 2,C = 3;
-    int select[3] = {1,10,14};
+    int select[3];
+    for (int i = 0; i < 3; ++i) {
+        printf("输入第%d个聚类中心",i+1);
+        scanf("%d",&select[i]);
+    }
     int count = 0; //迭代次数
     MatchData[select[0]].type = A;
     MatchData[select[1]].type = B;
@@ -106,6 +124,8 @@ void kMeans(Data* MatchData,CityName* City){
         }
     }
     while (!isOk(historyList,MatchData)) {
+        count++;
+        printf("------------------------------------------------------------------------------------------------------------------\n");
         for (int i = 0; i < 15; ++i) {
             historyList[i] = MatchData[i].type;
         }
@@ -118,10 +138,10 @@ void kMeans(Data* MatchData,CityName* City){
                     flag = j;
                 }
             }
-            printf("距离 %s 最近的城市为 %s 距离为 %.4f\n",City[i].CityName,City[flag].CityName,RetainDecimalPoints(min,10000));
+            printf("距离 %s 最近的城市为 %s 距离为 %.4f\n",Nation[i].NationName,Nation[flag].NationName,min);
             MatchData[i].type = flag+1;
         }
-        showData(MatchData,City);
+        showData(MatchData,Nation);
         for (int i = 0; i < 3; ++i) {
             float sum[3] = {0,0,0};
             float number = 0;
@@ -137,7 +157,12 @@ void kMeans(Data* MatchData,CityName* City){
                 boss[i][j] = sum[j] / number;
             }
         }
+        printf("重新选择的聚类中心为:\n");
+        for (int i = 0; i < 3; ++i) {
+            printf("[%c]:(%.4f , %.4f , %.4f)\n",i+65,boss[i][0],boss[i][1],boss[i][2]);
+        }
     }
+    printf("迭代次数为%d",count);
 }
 float getDist(float *  srcArray,float * targetArray){
     float sum = 0;
@@ -166,7 +191,7 @@ void getData(Data * MatchData){
     }
     fclose(fp);
 }
-void getCityName(CityName* City){
+void getNationName(NationName* Nation){
     FILE *fp = NULL;
     char str[255];
     int i = 0;
@@ -176,7 +201,7 @@ void getCityName(CityName* City){
         exit(-1);
     }
     while (fscanf(fp, "%s",str) != EOF){
-        strcpy(City[i].CityName,str);
+        strcpy(Nation[i].NationName,str);
         i++;
     }
     fclose(fp);
