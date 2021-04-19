@@ -37,15 +37,15 @@ void init(Data* MatchData);
  */
 float getDist(float * srcArray,float * targetArray);
 void  showData(Data* MatchData,CityName* City);
+/**
+ * @description: kmeans算法
+ * @param {Data*} MatchData 储存比赛数据的头节点 {CityName*} City 储存城市名称的头节点
+ */
 void kMeans(Data* MatchData,CityName* City);
 int isOk(int* newArray,Data* MatchData);
-
-int main() {
-    Data MatchData[15];
-    CityName City[15];
-    getData(MatchData);
-    init(MatchData);
-    getCityName(City);
+float RetainDecimalPoints(float temp,float pos);
+void showMatchData(CityName * City,Data * MatchData){
+    printf("--------------------------------------------\n");
     for (int i = 0; i < 15; ++i) {
         printf(" %6s -->",City[i].CityName);
         for (int j = 0; j < 3; ++j) {
@@ -53,6 +53,15 @@ int main() {
         }
         printf("\n");
     }
+    printf("--------------------------------------------\n");
+}
+int main() {
+    Data MatchData[15];
+    CityName City[15];
+    getData(MatchData);
+    init(MatchData);
+    getCityName(City);
+    showMatchData(City,MatchData);
     kMeans(MatchData,City);
     return 0;
 }
@@ -109,7 +118,7 @@ void kMeans(Data* MatchData,CityName* City){
                     flag = j;
                 }
             }
-            printf("距离 %s 最近的城市为 %s 距离为 %f\n",City[i].CityName,City[flag].CityName,min);
+            printf("距离 %s 最近的城市为 %s 距离为 %.4f\n",City[i].CityName,City[flag].CityName,RetainDecimalPoints(min,10000));
             MatchData[i].type = flag+1;
         }
         showData(MatchData,City);
@@ -184,11 +193,15 @@ void initData(Data* MatchData,int order){
     }
     for (int i = 0; i < 15; ++i) {
         float temp = ( MatchData[i].data[order] - min)/( max - min );
-        if( temp * 100 - (int)(temp * 100) >= 0.5 ){
-            temp = ((int)(temp * 100) + 1.0) / 100;
-        } else {
-            temp = ((int)(temp * 100)) / 100.0;
-        }
-        MatchData[i].data[order] = temp;
+        MatchData[i].data[order] = RetainDecimalPoints(temp,100);
     }
 }
+float RetainDecimalPoints(float temp,float pos){
+    if( temp * pos - (int)(temp * pos) >= 0.5 ){
+        temp = ((int)(temp * pos) + 1.0) / 100;
+    } else {
+        temp = ((int)(temp * pos)) / pos;
+    }
+    return temp;
+}
+
